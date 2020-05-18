@@ -38,4 +38,4 @@ async def on_message(message):
         else:
             await message.channel.send('Invalid command!')
 
-client.run('NzEwOTk2Nzk2NTAyOTY2MzAz.Xr8ubQ.Xh_okju0sliPkpIYjMJHUP3uubg')
+client.run('')
