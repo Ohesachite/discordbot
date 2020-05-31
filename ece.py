@@ -1,41 +1,48 @@
 import discord
-import logging
+import os
+import random
+from discord.ext import commands
+from dotenv import load_dotenv
 
-logging.basicConfig(level=logging.INFO)
+load_dotenv()
+bot = commands.Bot(command_prefix='stink ')
+TOKEN = os.environ.get('')
 
-client = discord.Client()
-
-@client.event
+@bot.event
 async def on_ready():
-    perms = discord.Permissions(268435456)
-    print('We have logged in as {0.user}'.format(client))
+    print(f'{bot.user.name} has connected to Discord!')
 
-@client.event
-async def on_message(message):
-    if message.author == client.user:
-        return
+@bot.command(name='ece', help='Stinky ECE majors!')
+async def uh_oh(ctx):
+    await ctx.send('Uh oh! Stinky!')
 
-    roles = message.guild.roles
-    cont = message.content
+@bot.command(name='Ece', help='Same as ece')
+async def uh_oh_cap(ctx):
+    await ctx.send('Uh oh! Stinky!')
 
-    if cont.lower() == 'ece' or cont.lower() == 'ee' or cont.lower() == 'ce' or cont.lower() == 'compe':
-        await message.channel.send('Uh oh! Stinky!')
+@bot.command(name='ECE', help='Same as ece')
+async def uh_oh_upper(ctx):
+    await ctx.send('Uh oh! Stinky!')
 
-    contparts = cont.split()
-    if(contparts[0] == 'stink'):
-        if(len(contparts) == 1):
-            await message.channel.send('Usage: stink [command] [paramaters]')
-        elif(contparts[1] == 'add'):
-            if(len(contparts) == 2):
-                await message.channel.send('Usage: stink add [subject] [number]')
-            elif(len(contparts) == 4):
-                role = find_role(roles, contparts[2] + ' ' + contparts[3])
-                if(role == None):
-                    await message.channel.send('Class not found! Please check with an admin if that class actually exists!')
-                else:
-                    await client.add_roles(message.author, role)
+@bot.command(name='add', help='Add group chat for class')
+async def add_class(ctx, subject, course_number):
+    user = ctx.message.author
+    print('Reached fetching phase')
+    role = discord.utils.get(user.guild.roles, name = subject.upper() + ' ' + course_number)
+    if(role is None):
+        await ctx.send('Not a class on this server!')
+    else:
+        print('Reached adding phase')
+        await user.add_roles(role)
+        print('Done')
 
-        else:
-            await message.channel.send('Invalid command!')
+@add_class.error
+async def on_command_error(ctx, error):
+    if isinstance(error, commands.errors.MissingRequiredArgument):
+        await ctx.send('Not enough parameters!')
+    elif isinstance(error, commands.errors.CommandNotFound):
+        await ctx.send('Command not found!')
+    else:
+        raise error
 
-client.run('')
+bot.run('')
