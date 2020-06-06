@@ -6,7 +6,8 @@ from dotenv import load_dotenv
 
 load_dotenv()
 bot = commands.Bot(command_prefix='stink ')
-os.environ.get('')
+TOKEN = ''
+os.environ.get(TOKEN)
 
 @bot.event
 async def on_ready():
@@ -35,6 +36,18 @@ async def add_class(ctx, subject, course_number):
         await user.add_roles(role)
         await ctx.send('Class added!')
 
+@bot.command(name='remove', help='Remove group chat for class')
+async def remove_class(ctx, subject, course_number):
+    user = ctx.message.author
+    role = discord.utils.get(user.guild.roles, name = subject.upper() + ' ' + course_number)
+    if(role is None):
+        await ctx.send('Not a class on this server!')
+    elif role in user.roles:
+        await user.remove_roles(role)
+        await ctx.send('Class removed!')
+    else:
+        await ctx.send('You are not in the class!')
+
 @bot.event
 async def on_command_error(ctx, error):
     if isinstance(error, commands.errors.MissingRequiredArgument):
@@ -44,4 +57,4 @@ async def on_command_error(ctx, error):
     else:
         raise error
 
-bot.run('')
+bot.run(TOKEN)
