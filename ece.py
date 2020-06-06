@@ -48,12 +48,36 @@ async def remove_class(ctx, subject, course_number):
     else:
         await ctx.send('You are not in the class!')
 
+@bot.command(name='create', help='Create class on this server. Command accessible only to admins or moderators')
+@commands.has_permissions(manage_channels=True)
+async def create_class(ctx, subject, course_number):
+    g = ctx.guild
+    n = subject.upper() + ' ' + course_number
+    if not (discord.utils.get(g.roles, name = n) is None):
+        await ctx.send('Class already exists: ' + n)
+        return
+    role = await g.create_role(name=n)
+    overwrites = {
+        g.default_role: discord.PermissionOverwrite(read_messages=False),
+        discord.utils.get(g.roles, name = 'Admin'): discord.PermissionOverwrite(read_messages=True),
+        discord.utils.get(g.roles, name = 'Moderators'): discord.PermissionOverwrite(read_messages=True),
+        role: discord.PermissionOverwrite(read_messages=True)
+    }
+    category = await g.create_category(n, overwrites = overwrites)
+    await g.create_text_channel('everythingelse', category = category)
+    await g.create_text_channel('homework', category = category)
+    await g.create_text_channel('exams', category = category)
+    await g.create_voice_channel('general', category = category)
+    await ctx.send('Created new class: ' + n)
+
 @bot.event
 async def on_command_error(ctx, error):
     if isinstance(error, commands.errors.MissingRequiredArgument):
         await ctx.send('Not enough parameters!')
     elif isinstance(error, commands.errors.CommandNotFound):
         await ctx.send('Command not found!')
+    elif isinstance(error, commands.errors.MissingPermissions):
+        await ctx.send('You do not have permissions!')
     else:
         raise error
 
