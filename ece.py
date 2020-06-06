@@ -48,9 +48,9 @@ async def remove_class(ctx, subject, course_number):
     else:
         await ctx.send('You are not in the class!')
 
-@bot.command(name='create', help='Create class on this server. Command accessible only to admins or moderators')
+@bot.command(name='create', help='Create class on this server, contains additional arguments (d,l,av) which must be specified after the class name, command accessible only to admins or mods')
 @commands.has_permissions(manage_channels=True)
-async def create_class(ctx, subject, course_number):
+async def create_class(ctx, subject, course_number, *args):
     g = ctx.guild
     n = subject.upper() + ' ' + course_number
     if not (discord.utils.get(g.roles, name = n) is None):
@@ -67,8 +67,35 @@ async def create_class(ctx, subject, course_number):
     await g.create_text_channel('everythingelse', category = category)
     await g.create_text_channel('homework', category = category)
     await g.create_text_channel('exams', category = category)
+    if 'd' in args:
+        await g.create_text_channel('discussion', category = category)
+    if 'l' in args:
+        await g.create_text_channel('labs', category = category)
     await g.create_voice_channel('general', category = category)
+    if 'av' in args:
+        if 'd' in args:
+            await g.create_voice_channel('discussion', category = category)
+        if 'l' in args:
+            await g.create_voice_channel('labs', category = category)
     await ctx.send('Created new class: ' + n)
+    print(len(g.channels))
+
+@bot.command(name='delete', help='Delete class on this server, command accessible only to admins or mods')
+@commands.has_permissions(manage_channels=True)
+async def delete_class(ctx, subject, course_number):
+    g = ctx.guild
+    n = subject.upper() + ' ' + course_number
+    role = discord.utils.get(g.roles, name=n)
+    if role is None:
+        ctx.send('Class does not exist!')
+        return
+    category = discord.utils.get(g.categories, name=n)
+    for channel in category.channels:
+        await channel.delete()
+    await category.delete()
+    await role.delete()
+    await ctx.send('Class deleted: ' + n)
+    print(len(g.channels))
 
 @bot.event
 async def on_command_error(ctx, error):
@@ -77,7 +104,7 @@ async def on_command_error(ctx, error):
     elif isinstance(error, commands.errors.CommandNotFound):
         await ctx.send('Command not found!')
     elif isinstance(error, commands.errors.MissingPermissions):
-        await ctx.send('You do not have permissions!')
+        await ctx.send('You do not have permission!')
     else:
         raise error
 
