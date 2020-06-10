@@ -80,6 +80,37 @@ async def create_class(ctx, subject, course_number, *args):
     await ctx.send('Created new class: ' + n)
     print(len(g.channels))
 
+@bot.command(name='edit', help='Edit class on server using arguments (d,l,av), command accessible only to admins or mods')
+@commands.has_permissions(manage_channels=True)
+async def edit_class(ctx, subject, course_number, *args):
+    g = ctx.guild
+    n = subject.upper() + ' ' + course_number
+    role = discord.utils.get(g.roles, name=n)
+    if role is None:
+       await ctx.send('Class does not exist!')
+       return
+    category = discord.utils.get(g.categories, name=n)
+    dchannel = discord.utils.get(category.channels, name='discussion')
+    if ('d' in args) and (dchannel is None):
+        await g.create_text_channel('discussion', category=category)
+    elif (not ('d' in args)) and (not (dchannel is None)):
+        await dchannel.delete()
+    lchannel = discord.utils.get(category.channels, name='labs')
+    if ('l' in args) and (lchannel is None):
+        await g.create_text_channel('labs', category=category)
+    elif (not ('l' in args)) and (not (lchannel is None)):
+        await lchannel.delete()
+    for vc in category.voice_channels:
+        if not (vc.name == 'general'):
+            await vc.delete()
+    if 'av' in args:
+        if 'd' in args:
+            await g.create_voice_channel('discussion', category = category)
+        if 'l' in args:
+            await g.create_voice_channel('labs', category = category)
+    await ctx.send('Edited class: ' + n)
+    print(len(g.channels))
+
 @bot.command(name='delete', help='Delete class on this server, command accessible only to admins or mods')
 @commands.has_permissions(manage_channels=True)
 async def delete_class(ctx, subject, course_number):
@@ -87,7 +118,7 @@ async def delete_class(ctx, subject, course_number):
     n = subject.upper() + ' ' + course_number
     role = discord.utils.get(g.roles, name=n)
     if role is None:
-        ctx.send('Class does not exist!')
+        await ctx.send('Class does not exist!')
         return
     category = discord.utils.get(g.categories, name=n)
     for channel in category.channels:
